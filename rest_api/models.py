@@ -22,8 +22,6 @@ USER_TYPE_CHOICES = (
 )
 
 
-# Create your models here.
-
 
 class UserManager(BaseUserManager):
     """
