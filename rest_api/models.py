@@ -1,9 +1,12 @@
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, User
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_rest_passwordreset.tokens import get_token_generator
+from django.contrib.auth.base_user import BaseUserManager
+
+
 
 STATE_CHOICES = (
     ('basket', 'Статус корзины'),
@@ -58,7 +61,7 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
-class User(AbstractUser):
+class User(UserManager):
     """
     Стандартная модель пользователей
     """
