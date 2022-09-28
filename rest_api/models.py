@@ -1,12 +1,9 @@
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import AbstractUser, User
+from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_rest_passwordreset.tokens import get_token_generator
-from django.contrib.auth.base_user import BaseUserManager
-
-
 
 STATE_CHOICES = (
     ('basket', 'Статус корзины'),
@@ -61,7 +58,7 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
-class User(UserManager):
+class User(AbstractUser):
     """
     Стандартная модель пользователей
     """
@@ -81,14 +78,14 @@ class User(UserManager):
             'unique': _("A user with that username already exists."),
         },
     )
-    is_active = models.BooleanField(
-        _('active'),
-        default=False,
-        help_text=_(
-            'Designates whether this user should be treated as active. '
-            'Unselect this instead of deleting accounts.'
-        ),
-    )
+    # is_active = models.BooleanField(
+    #     _('active'),
+    #     default=False,
+    #     help_text=_(
+    #         'Designates whether this user should be treated as active. '
+    #         'Unselect this instead of deleting accounts.'
+    #     ),
+    # )
     type = models.CharField(verbose_name='Тип пользователя', choices=USER_TYPE_CHOICES, max_length=5, default='buyer')
 
     def __str__(self):
@@ -98,7 +95,6 @@ class User(UserManager):
         verbose_name = 'Пользователь'
         verbose_name_plural = "Список пользователей"
         ordering = ('email',)
-
 
 class Shop(models.Model):
     name = models.CharField(max_length=50, verbose_name='Название')

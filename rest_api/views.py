@@ -1,13 +1,66 @@
 from webbrowser import get
-
 from django.core.validators import URLValidator
 from django.http import JsonResponse
 from django.shortcuts import render
+from rest_framework import viewsets, generics
+from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from yaml import load as load_yaml, Loader
 
-from rest_api.models import ProductInfo, Product, Category, Shop, ProductParameter, Parameter
+from rest_api.models import ProductInfo, Product, Category, Shop, ProductParameter, Parameter, User
+from rest_api.serializers import UserSerializer, LoginSerializer
+
+from .models import USER_TYPE_CHOICES
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    http_method_names = ['get', 'post', 'patch']
+    serializer_class = UserSerializer
+
+
+    def get_object(self):
+        user = User.objects.filter(pk=self.request.user.pk)
+        if user:
+            return user.first()
+        raise ValidationError({'error': 'token not provided'})
+
+    def create(self, request, *args, **kwargs):
+        if request.data['type'] not in ['shop', 'buyer']:
+            return ValidationError(
+                {'role': f'correct choices: {USER_TYPE_CHOICES}'}
+            )
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        password = serializer.validated_data['password']
+        user = User.objects.create(**serializer.validated_data)
+        user.set_password(password)
+        user.save()
+        return Response(self.serializer_class(user).data)
+
+
+class UserLoginView(generics.CreateAPIView):
+    serializer_class = LoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        password = serializer.validated_data['password']
+
+        user = User.objects.filter(email=email)
+        if not user:
+            raise ValidationError({'error': 'user not found'})
+        if not user or not user.first().check_password(password):
+            return Response(
+                {'error': 'wrong credentials'},
+                status=401
+            )
+        token, _ = Token.objects.get_or_create(user=user.first())
+        return Response({'token': token.key})
 
 
 class PartnerUpdate(APIView):
@@ -21,7 +74,8 @@ class PartnerUpdate(APIView):
         if request.user.type != 'shop':
             return JsonResponse({'Status': False, 'Error': 'Только для магазинов'}, status=403)
 
-        url = request.data.get('url')
+        url = request.query_params.get('url')
+        print(url)
         if url:
             validate_url = URLValidator()
             try:
@@ -31,6 +85,7 @@ class PartnerUpdate(APIView):
             else:
                 stream = get(url).content
 
+                # stream = open(url, 'r')
                 data = load_yaml(stream, Loader=Loader)
 
                 shop, _ = Shop.objects.get_or_create(name=data['shop'], user_id=request.user.id)
