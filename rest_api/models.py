@@ -65,7 +65,10 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
     objects = UserManager()
     USERNAME_FIELD = 'email'
-    email = models.EmailField(_('email address'), unique=True)
+    email = models.EmailField(_('Электронная почта'), unique=True)
+    f_name = models.CharField(verbose_name='Имя', max_length=40, blank=True)
+    s_name = models.CharField(verbose_name='Фамилия', max_length=40, blank=True)
+    t_name = models.CharField(verbose_name='Отчество', max_length=40, blank=True)
     company = models.CharField(verbose_name='Компания', max_length=40, blank=True)
     position = models.CharField(verbose_name='Должность', max_length=40, blank=True)
     username_validator = UnicodeUsernameValidator()
@@ -78,14 +81,14 @@ class User(AbstractUser):
             'unique': _("A user with that username already exists."),
         },
     )
-    # is_active = models.BooleanField(
-    #     _('active'),
-    #     default=False,
-    #     help_text=_(
-    #         'Designates whether this user should be treated as active. '
-    #         'Unselect this instead of deleting accounts.'
-    #     ),
-    # )
+    is_active = models.BooleanField(
+        _('active'),
+        default=True,
+        help_text=_(
+            'Designates whether this user should be treated as active. '
+            'Unselect this instead of deleting accounts.'
+        ),
+    )
     type = models.CharField(verbose_name='Тип пользователя', choices=USER_TYPE_CHOICES, max_length=5, default='buyer')
 
     def __str__(self):
