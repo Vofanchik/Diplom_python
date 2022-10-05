@@ -3,14 +3,15 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
-from rest_api.views import UserViewSet, UserLoginView, PartnerUpdate, ProductInfoView, AccountDetails
+from rest_api.views import UserViewSet, UserLoginView, PartnerUpdate, ProductInfoView, AccountDetails, BasketView
 
 router = routers.SimpleRouter()
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('products/', ProductInfoView.as_view(), name='products'),
-    path('update/', PartnerUpdate.as_view(), name='example'),
+    path('update/', PartnerUpdate.as_view(), name='upd'),
+    path('basket/', BasketView.as_view(), name='basket'),
     path('users/', include([
             path('login/', UserLoginView.as_view()),
             path('register/', UserViewSet.as_view({'post': 'create'})),
